@@ -11,6 +11,6 @@ As funções mais básicas possuem um botão para serem acessadas graficamente, 
 - A tecla P(paint) possui a função de ativar a função de pintar, mas esta função ainda não é muito boa, tem grande risco de travar o programa, seja na forma recursiva ou não.\n
 - "Andar" pela imagem é possível a partir das setas, existe a mesma função na interface, pela seta é mais rápido, pelo mouse é mais preciso.\n\n
 
-Obs.: o zoom é muito simples, ele carrega a imagem fora de proporção, por isso ele passa a ser muito lento caso o zoom seja alto, além de permitir apenas zooms múltiplos de 2.
+Obs.: O zoom é muito simples, ele carrega a imagem fora de proporção, por isso ele passa a ser muito lento caso o zoom seja alto, além de permitir apenas zooms múltiplos de 2.
 
 O modo paint não é muito bom, ele pinta bem regiões pequenas, mas regiões grandes ou ele trava ou ele demora muito.
