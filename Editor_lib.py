@@ -23,13 +23,17 @@ class Editor():
     def load_image(self, image):
         try:
             self.img = Image.open(image)
+            print('imagem aberta')
             self.img_format = self.img.format
+            print('formato adquirido')
             self.img_local = path.dirname(path.realpath(image))
+            print('caminho adquirido')
             self.image_name, self.img_ext = path.splitext(path.basename(image))
-            print('loading success!')
+            print('extencao adquirida')
+            print('\nloading success!\n')
             return True
         except:
-            print('loading error!')
+            print('\nloading error!\n')
             return False
 
     def save(self, name_image):
@@ -39,22 +43,22 @@ class Editor():
 
     def rotate_image(self, clockwise = True, angle = 90):
         if clockwise is True:
-            self.img = self.img.rotate(angle * -1, expand=True)
+            self.img = self.img.rotate(angle * (-1), expand=True)
         else:
             self.img = self.img.rotate(angle, expand=True)
 
     def add_color(self, pos, color):
-        self.img.putpixel(pos, color)
+        # garante que a localizacao e dentro da imagem
+        if pos[0] >= 0 and pos[0] < self.img.width and pos[1] >= 0 and pos[1] < self.img.height:
+            self.img.putpixel(pos, color)
 
     def add_circle(self, pos, color, radius):
+        # quadrado que engloba o circulo desejado
         for x in range(pos[0]-radius+1, pos[0]+radius):
             for y in range(pos[1]-radius+1, pos[1]+radius):
+                # dentro do circulo
                 if square(x-pos[0]) + square(y-pos[1]) <= square(radius):
-                    try:
-                        if x >= 0 and y >= 0:
-                            self.add_color((x, y), color)
-                    except:
-                        pass
+                    self.add_color((x, y), color)
 
     def add_line(self, ix, iy, fx, fy, color, radius=0):
         x = fx - ix
@@ -119,6 +123,9 @@ class Editor():
     def add_line_with_radius(self, ix, iy, fx, fy, color, radius):
         x = fx - ix
         y = fy - iy
+        # o arredondamento faz a linha sobrar, diminuir o raio em 1
+        # ajusta o erro do ponto extra que fica nas bordas do circulo completo
+        radius -= 1
         hip = sqrt(square(x) + square(y))
         sen = abs(x/hip)
         cos = abs(y/hip)
@@ -168,33 +175,73 @@ class Editor():
         # name = name.replace('.png', '(cortado).png')
         img.save(self.image_name + '(cortado).png', 'PNG')
 
-    # nao sei onde esta o erro, mas ele nao consegue pintar regiaes muito grandes
-    def paint(self, pos, color, base):
-        if color != base:
-            self.add_color(pos, color)
 
-            if pos[0]-1 >= 0 and pos[1]-1 >= 0 and pos[0]+1 < self.img.width and pos[1]+1 < self.img.height :
-                if self.img.getpixel((pos[0], pos[1]-1)) == base :
-                    self.paint((pos[0], pos[1]-1), color, base)
+    # O motodo recursivo da funcao paint da erro por quantidade de memoria utilizada
+    # o metodo nao recursivo da time out, falta resolver isso
 
-                if self.img.getpixel((pos[0], pos[1]+1)) == base :
-                    self.paint((pos[0], pos[1]+1), color, base)
+
+    # # nao sei onde esta o erro, mas ele nao consegue pintar regioes muito grandes
+    # def Paint(self, pos, color, base):
+    #     if color != base:
+    #         self.add_color(pos, color)
+
+    #         if pos[0]-1 >= 0 and pos[1]-1 >= 0 and pos[0] <= self.img.width and pos[1] <= self.img.height :
+    #             if self.img.getpixel((pos[0], pos[1]-1)) == base :
+    #                 self.paint((pos[0], pos[1]-1), color, base)
+
+    #             if self.img.getpixel((pos[0], pos[1]+1)) == base :
+    #                 self.paint((pos[0], pos[1]+1), color, base)
                 
-                if self.img.getpixel((pos[0]-1, pos[1])) == base :
-                    self.paint((pos[0]-1, pos[1]), color, base)
+    #             if self.img.getpixel((pos[0]-1, pos[1])) == base :
+    #                 self.paint((pos[0]-1, pos[1]), color, base)
                 
-                if self.img.getpixel((pos[0]+1, pos[1])) == base :
-                    self.paint((pos[0]+1, pos[1]), color, base)
+    #             if self.img.getpixel((pos[0]+1, pos[1])) == base :
+    #                 self.paint((pos[0]+1, pos[1]), color, base)
 
-    def paint_init(self, pos, color):
-        base_color = self.img.getpixel(pos)
-        new_color = (color[0], color[1], color[2], color[3])
-        if base_color != new_color:
-            self.paint(pos, new_color, base_color)
+    # def Paint_init(self, pos, color):
+    #     base_color = self.img.getpixel(pos)
+    #     new_color = (color[0], color[1], color[2], color[3])
+    #     if base_color != new_color :
+    #         # return
+    #         self.Paint(pos, new_color, base_color)
+
+    def Not_in_list(self, list1, item):
         try:
-            print(pos)
+            # verifica se o item esta na lista e da erro se n estiver
+            list1.index(item)
+            # se o item esta na lista retorna false
+            return False
         except:
-            pass
+            # se o item nao esta na lista retorna true
+            return True
+
+    def Paint_check(self, pos, base, list1):
+        # verifica se a direita deve ser pintada
+        if pos[0]+1 < self.img.width and self.Not_in_list(list1,(pos[0]+1, pos[1])):
+            if self.img.getpixel((pos[0]+1, pos[1])) == base:
+                list1.append((pos[0]+1, pos[1]))
+        # verifica se a esquerda deve ser pintada
+        if self.img.getpixel((pos[0]-1, pos[1])) == base and pos[0]-1 >= 0 and self.Not_in_list(list1,(pos[0]-1, pos[1])):
+            list1.append((pos[0]-1, pos[1]))
+        # verifica se em baixo deve ser pintdo
+        if pos[1]+1 < self.img.height and self.Not_in_list(list1,(pos[0], pos[1]+1)):
+            if self.img.getpixel((pos[0], pos[1]+1)) == base:
+                list1.append((pos[0], pos[1]+1))
+        # verifica se em cima deve ser pintado
+        if self.img.getpixel((pos[0], pos[1]-1)) == base and pos[1]-1 >= 0 and self.Not_in_list(list1,(pos[0], pos[1]-1)):
+            list1.append((pos[0], pos[1]-1))
+
+    def Paint_init(self, pos, color):
+        # lista de posicoes que devem ser pintadas
+        to_paint = []
+        cont = 0
+        to_paint.append(pos)
+        # cor da base pintada
+        base = self.img.getpixel(pos)
+        while cont < len(to_paint):
+            self.add_color(to_paint[cont], color)
+            self.Paint_check(to_paint[cont], base, to_paint)
+            cont += 1
 
 
 class Editor_screen_parameters():
@@ -217,3 +264,11 @@ def cutting_outline(screen, pos1, pos2, color):
         pygame.draw.rect(screen, color, [pos1[0], pos1[1], (pos2[0]-pos1[0]), 1])
         pygame.draw.rect(screen, color, [pos2[0], pos1[1], 1, (pos2[1]-pos1[1])])
         pygame.draw.rect(screen, color, [pos1[0], pos2[1], (pos2[0]-pos1[0]), 1])
+
+
+if __name__ == "__main__":
+
+    from time import sleep
+    ed = Editor()
+    ed.load_image("oi.png")
+    sleep(2)
