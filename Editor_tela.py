@@ -40,20 +40,20 @@ def Editor_interface(screen, keys):
     pygame.draw.rect(screen, (100, 100, 100, 255), [keys['menu']+5, 375, 70, 22])
     Text(screen, 'TRNSP', keys['letter_color'], 24, keys['menu']+7, 378)
 
-    if keys['search_color'] == 0:
+    if not keys['search_color']:
         pygame.draw.rect(screen, (100, 100, 100, 255), [keys['menu']+5, 175, 90, 22])
     else:
         pygame.draw.rect(screen, (255, 255, 100, 255), [keys['menu']+5, 175, 90, 22])
     Text(screen, 'SEARCH COLOR',keys['letter_color'], 15, keys['menu']+8, 181)
 
-    if keys['cut'] == 0:
+    if not keys['cut']:
         pygame.draw.rect(screen, (100, 100, 100, 255), [keys['menu']+5, 400, 70, 22])
     else:
         pygame.draw.rect(screen, (255, 255, 0, 255), [keys['menu']+5, 400, 70, 22])
     Text(screen, 'CUT IMG', keys['letter_color'], 20, keys['menu']+10, 404)
 
     try:
-        if keys['painter'] == 0:
+        if not keys['painter']:
             pygame.draw.rect(screen, (100, 100, 100, 255), [keys['menu']+78, 200, 20, 20])
         else:
             pygame.draw.rect(screen, (255, 255, 0, 255), [keys['menu']+78, 200, 20, 20])

@@ -22,7 +22,7 @@ try:
 except:
     print('Erro ai abrir a imagem do balde de tinta.')
 timer = pygame.time.Clock()
-FPS = 120
+FPS = 60
 BLACK = (0, 0, 0)
 posx = 0
 posy = 0
@@ -39,12 +39,12 @@ param.color_scale = []
 for x in range(0, 4):
     param.color_scale.append(int(0))
 param.color_scale[3] = 255
-paint = 0
-search_color = 0
-cut = 0
+paint = False
+search_color = False
+cut = False
 cut_aux = (-1, -1)
 radius = 0
-painter = 0
+painter = False
 move = []
 x = 0
 y = 0
@@ -55,7 +55,7 @@ menu_keys['letter_color'] = BLACK
 menu_keys['balde_de_tinta'] = tinta
 menu_keys['zoom'] = zoom
 for x in range(0, 4):
-    move.append(int(0))
+    move.append(False)
 
 
 quit_edit = False
@@ -99,13 +99,13 @@ while quit_edit != True:
             #     image = pygame.image.load(cache + '.png')
             #     image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
             if event.key == pygame.K_UP:
-                move[0] = 1
+                move[0] = True
             if event.key == pygame.K_DOWN:
-                move[1] = 1
+                move[1] = True
             if event.key == pygame.K_RIGHT:
-                move[2] = 1
+                move[2] = True
             if event.key == pygame.K_LEFT:
-                move[3] = 1
+                move[3] = True
             if event.key == pygame.K_r:
                 if param.scale_on[0] == 0:
                     param.scale_on[0] = 1
@@ -127,10 +127,10 @@ while quit_edit != True:
                 else:
                     param.scale_on[3] = 0
             if event.key == pygame.K_p:
-                if painter == 0:
-                    painter = 1
+                if painter:
+                    painter = False
                 else:
-                    painter = 0
+                    painter = True
             if event.key == pygame.K_EQUALS:
                 for c in range(0, 4):
                     if param.scale_on[c] == 1:
@@ -149,42 +149,42 @@ while quit_edit != True:
                 for c in range(0, 4):
                     adding[c] = 0
             if event.key == pygame.K_UP:
-                move[0] = 0
+                move[0] = False
             if event.key == pygame.K_DOWN:
-                move[1] = 0
+                move[1] = False
             if event.key == pygame.K_RIGHT:
-                move[2] = 0
+                move[2] = False
             if event.key == pygame.K_LEFT:
-                move[3] = 0
+                move[3] = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
 
             if x < menu:
-                if search_color == 1:
+                if search_color:
                     param.color_scale = ed.get_pix((x_img_pos-posx-posx, y_img_pos-posx-posy))
-                    search_color = 0
-                elif cut == 1:
+                    search_color = False
+                elif cut:
                     if cut_aux == (-1, -1):
                         cut_aux = (x_img_pos-posx, y_img_pos-posy)
                     else:
                         ed.cut_img(cut_aux, [x_img_pos-posx, y_img_pos-posy])
                         cut_aux = (-1, -1)
-                        cut = 0
-                elif painter == 1:
+                        cut = False
+                elif painter:
                     ed.Paint_init((x_img_pos - posx, y_img_pos - posy), 
                                   (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3]))
                     ed.save(cache)
                     image = pygame.image.load(cache + '.png')
                     image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
                 else:
-                    paint = 1
+                    paint = True
 
             # ativa o modo de busca de cor
             elif x >= menu+5 and x < menu+95 and y >= 175 and y < 197:
-                if search_color == 0:
-                    search_color = 1
+                if search_color:
+                    search_color = False
                 else:
-                    search_color = 0
+                    search_color = True
 
             # zoom e posicao da tela
             elif x >= menu+11 and x < menu+26 and y >= 253 and y < 268:
@@ -231,18 +231,18 @@ while quit_edit != True:
 
             # ativa o modo de corte de imagem
             elif x >= menu+5 and x < menu+75 and y >= 400 and y < 422:
-                if cut == 0:
-                    cut = 1
+                if not cut:
+                    cut = True
                 else:
-                    cut = 0
+                    cut = False
                     cut_aux = (-1, -1)
 
             # ativa o modo pintar
             elif x >= menu+78 and x < menu+98 and y >= 200 and y < 220:
-                if painter == 1:
-                    painter = 0
+                if painter:
+                    painter = False
                 else:
-                    painter = 1
+                    painter = True
 
             # verifica qual cor o usuario selecionou
             elif x >= menu+5 and x < menu+15 and y >= 200 and y < 210:
@@ -275,7 +275,7 @@ while quit_edit != True:
                 param.color_scale = [160, 0, 255, 255]
 
         if event.type == pygame.MOUSEBUTTONUP:
-            paint = 0
+            paint = False
 
     # aumenta ou diminui a saturacao das cores
     for c in range(0, 4):
@@ -286,13 +286,13 @@ while quit_edit != True:
             param.color_scale[c] = 255
 
     # move a imagem
-    if move[0] == 1:
+    if move[0]:
         posy += 1
-    if move[1] == 1:
+    if move[1]:
         posy -= 1
-    if move[2] == 1:
+    if move[2]:
         posx -= 1
-    if move[3] == 1:
+    if move[3]:
         posx += 1
 
     # atualiza a area que sera cortada da imagem de acordo com o mouse
@@ -300,7 +300,7 @@ while quit_edit != True:
         cutting_outline(screen, (cut_aux[0]*param.pix*zoom+posx, cut_aux[1]*param.pix*zoom+posy), (x, y), param.color_scale)
 
     # desenha na tela de acordo com o tamanho do raio
-    if paint == 1 and x < menu:
+    if paint and x < menu:
         try:
             c = (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3])
             if radius == 0:
