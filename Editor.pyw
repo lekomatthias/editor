@@ -62,10 +62,18 @@ quit_edit = False
 while quit_edit != True:
     timer.tick(FPS)
     screen.fill((50, 50, 50))
-    screen.blit(image, (posx*zoom*param.pix, posy*zoom*param.pix))
     ex_x, ex_y = x, y
     x, y = pygame.mouse.get_pos()
+    # desproporcao gerada pelo zoom
+    desp = zoom*param.pix
     x_img_pos, y_img_pos = x//param.pix//zoom, y//param.pix//zoom
+
+    # args -> imagem, posicao inicial do print,
+    #                tupla com posicao referenciada a posicao inicial + 
+    #                tamanho da imagem final
+    screen.blit(image, ((posx)*desp, (posy)*desp),
+                       (0, 0, 
+                        param.width*desp - (posx)*desp, param.height*desp - (posy)*desp))
 
     menu_keys['parameters'] = param
     menu_keys['x_img_pos'] = x_img_pos
@@ -206,7 +214,7 @@ while quit_edit != True:
                 posx = 0
                 posy = 0
 
-            # aumenta ou diminui o raio do traço
+            # aumenta ou diminui o raio do traco
             elif x >= menu+80 and x < menu+95 and y >= 315 and y < 330:
                 radius += 1
             elif x >= menu+80 and x < menu+95 and y >= 333 and y < 348:
@@ -301,33 +309,30 @@ while quit_edit != True:
 
     # desenha na tela de acordo com o tamanho do raio
     if paint and x < menu:
-        try:
-            c = (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3])
+        c = (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3])
+        if radius == 0:
+            ed.add_color((x_img_pos - posx, y_img_pos - posy), c)
+        else:
+            ed.add_circle((x_img_pos - posx, y_img_pos - posy), c, radius)
+
+        if x != ex_x or y != ex_y:
+            
+            # ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
+            #             x_//param.pix//zoom - posx, y//param.pix//zoom - posy,
+            #             c, radius=radius)
+
             if radius == 0:
-                ed.add_color((x_img_pos - posx, y_img_pos - posy), c)
+                ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
+                            x_img_pos - posx, y//param.pix//zoom - posy,
+                            c)
             else:
-                ed.add_circle((x_img_pos - posx, y_img_pos - posy), c, radius)
+                ed.add_line_with_radius(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
+                            x_img_pos - posx, y//param.pix//zoom - posy,
+                            c, radius)
 
-            if x != ex_x or y != ex_y:
-                
-                # ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-                #             x_//param.pix//zoom - posx, y//param.pix//zoom - posy,
-                #             c, radius=radius)
-
-                if radius == 0:
-                    ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-                                x_img_pos - posx, y//param.pix//zoom - posy,
-                                c)
-                else:
-                    ed.add_line_with_radius(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-                                x_img_pos - posx, y//param.pix//zoom - posy,
-                                c, radius)
-
-            ed.save(cache)
-            image = pygame.image.load(cache + '.png')
-            image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
-        except:
-            pass
+        ed.save(cache)
+        image = pygame.image.load(cache + '.png')
+        image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
 
     pygame.display.update()
 
