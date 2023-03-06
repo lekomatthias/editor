@@ -127,6 +127,9 @@ class Editor():
         # ajusta o erro do ponto extra que fica nas bordas do circulo completo
         radius -= 1
         hip = sqrt(square(x) + square(y))
+        # quando o mouse permanece no mesmo lugar hip == 0, portanto não há linha a ser feita
+        if hip == 0:
+            return 
         sen = abs(x/hip)
         cos = abs(y/hip)
         # linhas que passam pela corda de seno do circulo (pela "direita")
