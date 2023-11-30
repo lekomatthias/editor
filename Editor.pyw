@@ -1,13 +1,18 @@
-from Editor_lib import *
-from Editor_tela import *
-from Editor_inicializador import *
-import Editor_inicializador2
+# só importar tudo buga o pylance no meu computador, deixa tudo como erro, mas funciona normal
+# from libs import *
+
+# como nao quero tudo amarelo, importei um de cada vez
+from libs.Editor_inicializador import *
+from libs.Editor_inicializador2 import *
+from libs.Editor_lib import *
+from libs.Editor_tela import *
 
 # ed, param, cache, edit = Inicializador_terminal()
+ed, param, cache, edit = Inicializador_GUI()
 
-ed, param, cache, edit = Editor_inicializador2.Inicializador_GUI()
 
 name = ed.image_name + '.png'
+ed.image_cache_name = cache
 
 pygame.init()
 pygame.font.init()
@@ -18,9 +23,18 @@ pygame.display.set_caption('Editor')
 image = pygame.image.load(name)
 image = pygame.transform.scale(image, (menu, param.height*param.pix))
 try:
-    tinta = pygame.image.load('balde_de_tinta.png')
+    paint_bucket_name = f'icons/balde_de_tinta.png'
+    tinta = pygame.image.load(paint_bucket_name)
 except:
-    print('Erro ai abrir a imagem do balde de tinta.')
+    print('Erro ao abrir a imagem "' + paint_bucket_name + '".')
+    tinta = None
+try:
+    icon_name = f'icons/logo_editor.png'
+    icon = pygame.image.load(icon_name)
+    pygame.display.set_icon(icon)
+except:
+    print('Erro ao abrir a imagem "' + icon_name + '".')
+    icon = None
 timer = pygame.time.Clock()
 FPS = 60
 BLACK = (0, 0, 0)
@@ -59,6 +73,7 @@ for x in range(0, 4):
 
 
 quit_edit = False
+# loop principal
 while quit_edit != True:
     timer.tick(FPS)
     screen.fill((50, 50, 50))
@@ -66,7 +81,7 @@ while quit_edit != True:
     x, y = pygame.mouse.get_pos()
     # desproporcao gerada pelo zoom
     desp = zoom*param.pix
-    x_img_pos, y_img_pos = x//param.pix//zoom, y//param.pix//zoom
+    x_img_pos, y_img_pos = x//param.pix//zoom - posx, y//param.pix//zoom - posy
 
     # args -> imagem, posicao inicial do print,
     #                tupla com posicao referenciada a posicao inicial + 
@@ -86,9 +101,6 @@ while quit_edit != True:
 
     Editor_interface(screen, menu_keys)
 
-    Text(screen, f'x:{int(x/param.pix)}, y:{int(y/param.pix)}', BLACK, 20, menu+2, param.height*param.pix-20)
-
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_edit = True
@@ -98,14 +110,10 @@ while quit_edit != True:
                 quit_edit = True
             # if event.key == pygame.K_RIGHT:
             #     ed.rotate_image()
-            #     ed.save(cache)
-            #     image = pygame.image.load(cache + '.png')
-            #     image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
+            #     image = Image_update(ed, ed.image_cache_name, param, zoom)
             # if event.key == pygame.K_LEFT:
             #     ed.rotate_image(clockwise=False)
-            #     ed.save(cache)
-            #     image = pygame.image.load(cache + '.png')
-            #     image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
+            #     image = Image_update(ed, ed.image_cache_name, param, zoom)
             if event.key == pygame.K_UP:
                 move[0] = True
             if event.key == pygame.K_DOWN:
@@ -114,6 +122,11 @@ while quit_edit != True:
                 move[2] = True
             if event.key == pygame.K_LEFT:
                 move[3] = True
+
+            if event.key == pygame.K_c:
+                ed.Filter('r')
+                image = Image_update(ed, ed.image_cache_name, param, zoom)
+
             if event.key == pygame.K_r:
                 if param.scale_on[0] == 0:
                     param.scale_on[0] = 1
@@ -169,21 +182,19 @@ while quit_edit != True:
 
             if x < menu:
                 if search_color:
-                    param.color_scale = ed.get_pix((x_img_pos-posx-posx, y_img_pos-posx-posy))
+                    param.color_scale = ed.get_pix((x//param.pix-posx, y//param.pix-posy))
                     search_color = False
                 elif cut:
                     if cut_aux == (-1, -1):
-                        cut_aux = (x_img_pos-posx, y_img_pos-posy)
+                        cut_aux = (x_img_pos, y_img_pos)
                     else:
-                        ed.cut_img(cut_aux, [x_img_pos-posx, y_img_pos-posy])
+                        ed.cut_img(cut_aux, [x_img_pos, y_img_pos])
                         cut_aux = (-1, -1)
                         cut = False
                 elif painter:
-                    ed.Paint_init((x_img_pos - posx, y_img_pos - posy), 
+                    ed.Paint_init((x_img_pos, y_img_pos), 
                                   (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3]))
-                    ed.save(cache)
-                    image = pygame.image.load(cache + '.png')
-                    image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
+                    image = Image_update(ed, ed.image_cache_name, param, zoom)
                 else:
                     paint = True
 
@@ -233,9 +244,7 @@ while quit_edit != True:
             # deixa os param.pixeis da cor selecionada transparentes
             elif x >= menu+5 and x < menu+75 and y >= 375 and y < 397:
                 ed.transparet(param.color_scale)
-                ed.save(cache)
-                image = pygame.image.load(cache + '.png')
-                image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
+                image = Image_update(ed, ed.image_cache_name, param, zoom)
 
             # ativa o modo de corte de imagem
             elif x >= menu+5 and x < menu+75 and y >= 400 and y < 422:
@@ -311,28 +320,21 @@ while quit_edit != True:
     if paint and x < menu:
         c = (param.color_scale[0], param.color_scale[1], param.color_scale[2], param.color_scale[3])
         if radius == 0:
-            ed.add_color((x_img_pos - posx, y_img_pos - posy), c)
+            ed.add_color((x_img_pos, y_img_pos), c)
         else:
-            ed.add_circle((x_img_pos - posx, y_img_pos - posy), c, radius)
+            ed.add_circle((x_img_pos, y_img_pos), c, radius)
 
         if x != ex_x or y != ex_y:
-            
-            # ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-            #             x_//param.pix//zoom - posx, y//param.pix//zoom - posy,
-            #             c, radius=radius)
-
             if radius == 0:
                 ed.add_line(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-                            x_img_pos - posx, y//param.pix//zoom - posy,
+                            x_img_pos, y_img_pos,
                             c)
             else:
                 ed.add_line_with_radius(ex_x//param.pix//zoom - posx, ex_y//param.pix//zoom - posy,
-                            x_img_pos - posx, y//param.pix//zoom - posy,
+                            x_img_pos, y_img_pos,
                             c, radius)
 
-        ed.save(cache)
-        image = pygame.image.load(cache + '.png')
-        image = pygame.transform.scale(image, (menu*zoom, param.height*param.pix*zoom))
+        image = Image_update(ed, ed.image_cache_name, param, zoom)
 
     pygame.display.update()
 
